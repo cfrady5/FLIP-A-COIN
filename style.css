@@ -12,8 +12,8 @@
   --gold-lo: #a97a43;
   --gold-deep: #5c3c19;
 
-  /* Coin diameter: ~350–440px on desktop, shrinking with the viewport. */
-  --size: clamp(220px, min(80vw, 50vh), 440px);
+  /* Coin / ball diameter: ~350–440px on desktop, shrinking with the viewport. */
+  --size: clamp(220px, min(80vw, 46vh), 440px);
   --thick: calc(var(--size) * 0.075);
   --name-size: min(calc(var(--size) * 0.16), 11vw);
 
@@ -21,7 +21,7 @@
 }
 
 @supports (height: 1svh) {
-  :root { --size: clamp(220px, min(80vw, 50svh), 440px); }
+  :root { --size: clamp(220px, min(80vw, 46svh), 440px); }
 }
 
 *,
@@ -30,12 +30,15 @@
 
 html { background: var(--bg); }
 
+/* Cross-fade between the coin and 8-ball pages where supported. */
+@view-transition { navigation: auto; }
+
 body {
   margin: 0;
   min-height: 100vh;
   min-height: 100svh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
   background: var(--bg);
   color: var(--ink);
@@ -87,17 +90,100 @@ body::after {
 }
 
 /* --------------------------------------------------------------------------
+   Navbar
+   -------------------------------------------------------------------------- */
+
+.nav {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(14px, 2.6vh, 26px) clamp(16px, 4vw, 40px) 0;
+  view-transition-name: site-nav;
+}
+
+.nav__brand {
+  font-family: 'Cinzel', 'Trajan Pro', 'Times New Roman', serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--gold);
+}
+
+.nav__brand em {
+  padding: 0 0.15em;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--ink-muted);
+}
+
+.nav__links {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 240, 210, 0.035);
+  box-shadow: inset 0 0 0 1px rgba(214, 170, 106, 0.24);
+}
+
+.nav__link {
+  padding: 0.8em 1.3em 0.8em calc(1.3em + 0.22em);
+  border-radius: 999px;
+  font: 600 0.68rem/1 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--ink-faint);
+  transition: color 0.25s ease, background-color 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav__link:hover { color: rgba(241, 230, 207, 0.82); }
+
+.nav__link[aria-current='page'] {
+  color: #f6e8c8;
+  background: linear-gradient(180deg, rgba(227, 192, 138, 0.2), rgba(169, 122, 67, 0.14));
+  box-shadow: inset 0 0 0 1px rgba(243, 214, 160, 0.32), 0 4px 18px -8px rgba(222, 174, 104, 0.45);
+}
+
+.nav__brand:focus-visible,
+.nav__link:focus-visible {
+  outline: 2px solid rgba(243, 214, 160, 0.85);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+@media (max-width: 520px) {
+  .nav { justify-content: center; }
+  .nav__brand { display: none; }
+}
+
+/* --------------------------------------------------------------------------
    Layout
    -------------------------------------------------------------------------- */
 
 .stage {
   position: relative;
   z-index: 1;
+  flex: 1;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: clamp(28px, 7vh, 72px) 16px clamp(24px, 5vh, 48px);
+  justify-content: center;
+  padding: clamp(16px, 4vh, 44px) 16px clamp(20px, 4vh, 40px);
   overflow-x: clip; /* the glow is wider than small screens; the coin may still rise above */
 }
 
@@ -163,12 +249,13 @@ body::after {
   left: 0;
   top: 100%;
   width: 100%;
-  height: 100%;
+  height: calc(var(--size) * 0.42); /* only the visible part, so it never adds scroll height */
+  overflow: hidden;
   pointer-events: none;
   opacity: 0.5;
   filter: blur(1.5px);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 40%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 40%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 100%);
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
 }
@@ -180,7 +267,14 @@ body::after {
   perspective-origin: 50% 50%;
 }
 
-.view--mirror { transform: scaleY(-1); }
+.view--mirror {
+  inset: auto;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--size);
+  transform: scaleY(-1);
+}
 
 .toss,
 .coin {
@@ -432,6 +526,202 @@ body::after {
 .is-flipping .arena { cursor: default; }
 
 /* --------------------------------------------------------------------------
+   Magic 8 Ball
+   -------------------------------------------------------------------------- */
+
+.arena__shadow--ball {
+  top: calc(100% - var(--size) * 0.01);
+  width: 64%;
+  height: calc(var(--size) * 0.07);
+}
+
+.ball {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, #45454b 0%, #1d1d21 22%, #0a0a0b 52%, #000 76%);
+  box-shadow:
+    inset -18px -26px 50px rgba(0, 0, 0, 0.85),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 40px 70px -30px rgba(0, 0, 0, 0.95);
+  will-change: transform;
+}
+
+/* Warm bounce light from the glow behind, along the lower-right limb. */
+.ball::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle at 80% 86%, rgba(222, 170, 98, 0.26) 0%, rgba(222, 170, 98, 0.08) 18%, rgba(222, 170, 98, 0) 34%);
+  z-index: 3;
+}
+
+.ball__gloss {
+  position: absolute;
+  left: 15%;
+  top: 7%;
+  width: 42%;
+  height: 27%;
+  z-index: 4;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: rotate(-30deg);
+  background: radial-gradient(ellipse at 50% 45%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0) 72%);
+}
+
+.ball__gloss::after {
+  content: '';
+  position: absolute;
+  left: 34%;
+  top: 30%;
+  width: 18%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
+}
+
+.ball__eight {
+  position: absolute;
+  left: 28%;
+  top: 28%;
+  width: 44%;
+  height: 44%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 36%, #ffffff 0%, #f2efe8 45%, #cbc7be 100%);
+  box-shadow:
+    inset -6px -8px 16px rgba(0, 0, 0, 0.2),
+    0 0 0 calc(var(--size) * 0.006) rgba(0, 0, 0, 0.45);
+}
+
+.ball__eight span {
+  font: 700 calc(var(--size) * 0.29) / 1 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  color: #0e0e10;
+  transform: translateY(-3%);
+}
+
+.ball__window {
+  position: absolute;
+  left: 24%;
+  top: 24%;
+  width: 52%;
+  height: 52%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #12275f 0%, #091739 52%, #020716 100%);
+  transform: translateY(150%) scale(0.86, 0.3);
+  opacity: 0.4;
+}
+
+.ball__bob {
+  position: absolute;
+  inset: 7%;
+  animation: die-bob 5s ease-in-out infinite;
+}
+
+@keyframes die-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(2.5%) rotate(1.5deg); }
+}
+
+.ball__die {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  opacity: 0;
+}
+
+.ball__die-text {
+  font-family: 'Oswald', 'Arial Narrow', Impact, sans-serif;
+  font-weight: 500;
+  font-size: 26px;
+  letter-spacing: 1px;
+  fill: #e9eeff;
+}
+
+/* Murky liquid falloff, a dark bezel and a glint on the window glass. */
+.ball__glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 30% at 38% 18%, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(circle at 50% 50%, rgba(2, 6, 20, 0) 42%, rgba(2, 6, 20, 0.75) 78%);
+  box-shadow:
+    inset 0 0 0 calc(var(--size) * 0.012) #050506,
+    inset 0 calc(var(--size) * 0.02) calc(var(--size) * 0.05) rgba(0, 0, 0, 0.85);
+}
+
+.is-asking .arena { cursor: default; }
+
+/* Lead-in phrase above the 8-ball answer ("Signs point to"). */
+.result__lead {
+  margin: 0 0 0.3rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.05rem, 1.6vw + 0.6rem, 1.35rem);
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+}
+
+.result.is-idle .result__lead { display: none; }
+
+.result--ball.is-revealed .result__lead { animation: reveal-note 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+.result--ball.is-revealed .result__name { animation-delay: 0.15s; }
+
+/* Question field with the Shake button tucked inside it. */
+.ask {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 460px);
+  margin-top: clamp(16px, 3vh, 28px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(20, 16, 12, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(214, 170, 106, 0.32),
+    0 14px 34px -16px rgba(0, 0, 0, 0.9);
+  transition: box-shadow 0.3s ease;
+}
+
+.ask:focus-within {
+  box-shadow:
+    inset 0 0 0 1px rgba(243, 214, 160, 0.62),
+    0 0 0 4px rgba(222, 174, 104, 0.12),
+    0 14px 34px -16px rgba(0, 0, 0, 0.9);
+}
+
+.ask__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.7em 0.6em 0.7em 1.15em;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: 400 1rem/1.2 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; /* 16px: no zoom-on-focus on iOS */
+  caret-color: var(--gold);
+}
+
+.ask__input::placeholder { color: rgba(241, 230, 207, 0.4); }
+
+.ask .ask__button {
+  flex: none;
+  margin-top: 0;
+  padding: 1.05em 1.5em 1.05em calc(1.5em + 0.3em);
+}
+
+/* --------------------------------------------------------------------------
    Tally
    -------------------------------------------------------------------------- */
 
@@ -461,7 +751,9 @@ body::after {
    -------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
   .coin__glint { display: none; }
+  .ball__bob { animation: none; }
   .arena.is-landed .arena__glow::after { animation: none; }
   .result.is-revealed .result__name,
   .result.is-revealed .result__note { animation: fade-in 0.4s ease both; }
