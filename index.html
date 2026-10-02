@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Courtney or Sana?</title>
+  <meta name="description" content="One commemorative coin. Courtney on one side, Sana on the other. Flip it and let the coin decide.">
+  <meta name="theme-color" content="#0b0a09">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fbebc1'/%3E%3Cstop offset='.55' stop-color='%23c99a5e'/%3E%3Cstop offset='1' stop-color='%236e4a22'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='30' fill='url(%23g)'/%3E%3Ccircle cx='32' cy='32' r='24' fill='none' stroke='%235e3d1a' stroke-width='2.5' stroke-dasharray='1.5 3' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&display=swap">
+
+  <link rel="preload" as="image" href="images/courtney.png">
+  <link rel="preload" as="image" href="images/sana.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <!-- Shared artwork for both faces of the coin: rim, legend band, lettering and stars. -->
+  <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="g-lip" x1="0.18" y1="0" x2="0.82" y2="1">
+        <stop offset="0" stop-color="#fff4d6"/>
+        <stop offset="0.3" stop-color="#e6c48f"/>
+        <stop offset="0.68" stop-color="#a87a45"/>
+        <stop offset="1" stop-color="#5a3a17"/>
+      </linearGradient>
+      <linearGradient id="g-lip-bevel" x1="0.18" y1="0" x2="0.82" y2="1">
+        <stop offset="0" stop-color="#5e3d1a"/>
+        <stop offset="0.45" stop-color="#9c6f3f"/>
+        <stop offset="0.8" stop-color="#e3bf88"/>
+        <stop offset="1" stop-color="#f8e6bc"/>
+      </linearGradient>
+      <radialGradient id="g-band" cx="0.42" cy="0.3" r="0.8">
+        <stop offset="0" stop-color="#dcb986"/>
+        <stop offset="0.5" stop-color="#b98d57"/>
+        <stop offset="1" stop-color="#7f5a2d"/>
+      </radialGradient>
+      <linearGradient id="g-letter" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fff3d2"/>
+        <stop offset="0.5" stop-color="#e8c890"/>
+        <stop offset="1" stop-color="#b5874c"/>
+      </linearGradient>
+
+      <filter id="f-grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="noise"/>
+        <feColorMatrix in="noise" type="matrix" result="grey"
+          values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0 1"/>
+        <feComposite in="SourceGraphic" in2="grey" operator="arithmetic" k1="0" k2="1" k3="0.2" k4="-0.1" result="grained"/>
+        <feComposite in="grained" in2="SourceGraphic" operator="in"/>
+      </filter>
+      <filter id="f-soft" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="7"/>
+      </filter>
+      <filter id="f-emboss-shadow" x="-5%" y="-5%" width="110%" height="110%">
+        <feGaussianBlur stdDeviation="1.4"/>
+      </filter>
+
+      <!-- Legend baseline: the upper arc of a circle (r = 425) centred on the coin. -->
+      <path id="p-legend" d="M 75 500 A 425 425 0 0 1 925 500"/>
+
+      <text id="t-courtney" class="legend"><textPath href="#p-legend" startOffset="50%"><tspan dx="8">COURTNEY</tspan></textPath></text>
+      <text id="t-sana" class="legend"><textPath href="#p-legend" startOffset="50%"><tspan dx="8">SANA</tspan></textPath></text>
+
+      <!-- Five stars along the lower arc of the legend band, points facing the rim. -->
+      <g id="g-stars">
+        <path id="p-star" d="M0-14L3.46-4.76 13.32-4.33 5.59 1.82 8.23 11.33 0 5.88-8.23 11.33-5.59 1.82-13.32-4.33-3.46-4.76Z" transform="translate(500 943) rotate(180)"/>
+        <use href="#p-star" transform="rotate(-11 500 500)"/>
+        <use href="#p-star" transform="rotate(11 500 500)"/>
+        <use href="#p-star" transform="rotate(-22 500 500)"/>
+        <use href="#p-star" transform="rotate(22 500 500)"/>
+      </g>
+
+      <!-- Everything except the portrait and the name: raised rim, bevel, grained legend band, medallion shadow. -->
+      <g id="g-blank">
+        <circle cx="500" cy="500" r="500" fill="url(#g-lip)"/>
+        <circle cx="500" cy="500" r="486" fill="url(#g-lip-bevel)"/>
+        <circle cx="500" cy="500" r="473" fill="url(#g-band)" filter="url(#f-grain)"/>
+        <circle cx="500" cy="500" r="469" fill="none" stroke="#1b0f04" stroke-opacity="0.45" stroke-width="7" filter="url(#f-soft)"/>
+        <circle cx="500" cy="500" r="473" fill="none" stroke="#2c1a08" stroke-opacity="0.6" stroke-width="2"/>
+        <circle cx="503" cy="508" r="414" fill="#140b02" fill-opacity="0.6" filter="url(#f-soft)"/>
+        <circle cx="500" cy="500" r="413" fill="none" stroke="#2c1a08" stroke-opacity="0.7" stroke-width="3"/>
+      </g>
+    </defs>
+  </svg>
+
+  <main class="stage">
+    <h1 class="sr-only">Courtney or Sana?</h1>
+
+    <div class="arena" data-arena>
+      <div class="arena__glow" aria-hidden="true"></div>
+      <div class="arena__shadow" aria-hidden="true" data-shadow></div>
+      <div class="arena__mirror" aria-hidden="true" data-mirror></div>
+
+      <div class="view" data-view>
+        <div class="toss" data-toss>
+          <div class="coin" role="img" aria-label="Coin showing Courtney" data-coin>
+            <div class="coin__face coin__face--front" data-face="front">
+              <svg class="coin__art" viewBox="0 0 1000 1000" aria-hidden="true" focusable="false">
+                <use href="#g-blank"/>
+                <use href="#t-courtney" fill="#1a0e04" fill-opacity="0.65" transform="translate(2.5 3.5)" filter="url(#f-emboss-shadow)"/>
+                <use href="#t-courtney" fill="#fff6de" fill-opacity="0.6" transform="translate(-1.5 -2)"/>
+                <use href="#t-courtney" fill="url(#g-letter)"/>
+                <use href="#g-stars" fill="#1a0e04" fill-opacity="0.65" transform="translate(2 3)" filter="url(#f-emboss-shadow)"/>
+                <use href="#g-stars" fill="#fff6de" fill-opacity="0.55" transform="translate(-1.2 -1.6)"/>
+                <use href="#g-stars" fill="url(#g-letter)"/>
+                <image href="images/courtney.png" x="88" y="88" width="824" height="824"/>
+              </svg>
+              <div class="coin__glint"></div>
+              <div class="coin__shade" data-shade></div>
+              <div class="coin__sheen" data-sheen><i></i></div>
+            </div>
+
+            <div class="coin__face coin__face--back" data-face="back">
+              <svg class="coin__art" viewBox="0 0 1000 1000" aria-hidden="true" focusable="false">
+                <use href="#g-blank"/>
+                <use href="#t-sana" fill="#1a0e04" fill-opacity="0.65" transform="translate(2.5 3.5)" filter="url(#f-emboss-shadow)"/>
+                <use href="#t-sana" fill="#fff6de" fill-opacity="0.6" transform="translate(-1.5 -2)"/>
+                <use href="#t-sana" fill="url(#g-letter)"/>
+                <use href="#g-stars" fill="#1a0e04" fill-opacity="0.65" transform="translate(2 3)" filter="url(#f-emboss-shadow)"/>
+                <use href="#g-stars" fill="#fff6de" fill-opacity="0.55" transform="translate(-1.2 -1.6)"/>
+                <use href="#g-stars" fill="url(#g-letter)"/>
+                <image href="images/sana.png" x="88" y="88" width="824" height="824"/>
+              </svg>
+              <div class="coin__glint"></div>
+              <div class="coin__shade" data-shade></div>
+              <div class="coin__sheen" data-sheen><i></i></div>
+            </div>
+
+            <div class="coin__edge" data-edge></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result is-idle" data-result>
+      <p class="result__name" data-result-name>Courtney or Sana?</p>
+      <p class="result__note" data-result-note>&nbsp;</p>
+    </div>
+
+    <button class="flip" type="button" data-flip>Flip the coin</button>
+
+    <p class="tally" data-tally>
+      Courtney: <span data-count="courtney">0</span>
+      <span class="tally__sep" aria-hidden="true">|</span>
+      Sana: <span data-count="sana">0</span>
+    </p>
+
+    <p class="sr-only" aria-live="polite" aria-atomic="true" data-announce></p>
+  </main>
+</body>
+</html>

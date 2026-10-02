@@ -1,0 +1,476 @@
+/* ==========================================================================
+   Courtney or Sana? — a single commemorative coin, tossed on demand.
+   ========================================================================== */
+
+:root {
+  --bg: #090807;
+  --ink: #f1e6cf;
+  --ink-muted: rgba(241, 230, 207, 0.6);
+  --ink-faint: rgba(241, 230, 207, 0.36);
+  --gold-hi: #fff2d0;
+  --gold: #e3c08a;
+  --gold-lo: #a97a43;
+  --gold-deep: #5c3c19;
+
+  /* Coin diameter: ~350–440px on desktop, shrinking with the viewport. */
+  --size: clamp(220px, min(80vw, 50vh), 440px);
+  --thick: calc(var(--size) * 0.075);
+  --name-size: min(calc(var(--size) * 0.16), 11vw);
+
+  color-scheme: dark;
+}
+
+@supports (height: 1svh) {
+  :root { --size: clamp(220px, min(80vw, 50svh), 440px); }
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Warm charcoal falloff + vignette, fixed behind everything. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 55% at 50% 36%, rgba(58, 44, 30, 0.55) 0%, rgba(24, 19, 15, 0.4) 45%, rgba(0, 0, 0, 0) 75%),
+    radial-gradient(140% 110% at 50% 40%, #15120f 0%, #0b0a08 55%, #040303 100%);
+}
+
+/* Fine film grain so the darkness has some texture. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   Layout
+   -------------------------------------------------------------------------- */
+
+.stage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(28px, 7vh, 72px) 16px clamp(24px, 5vh, 48px);
+  overflow-x: clip; /* the glow is wider than small screens; the coin may still rise above */
+}
+
+/* --------------------------------------------------------------------------
+   Arena: glow, floor shadow, reflection and the 3D coin itself
+   -------------------------------------------------------------------------- */
+
+.arena {
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arena__glow,
+.arena__glow::after {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 250%;
+  height: 230%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(222, 170, 98, 0.24) 0%, rgba(222, 170, 98, 0.09) 42%, rgba(222, 170, 98, 0) 100%);
+}
+
+.arena__glow::after {
+  content: '';
+  width: 70%;
+  height: 70%;
+  opacity: 0;
+  background: radial-gradient(closest-side, rgba(255, 214, 150, 0.32), rgba(255, 214, 150, 0) 100%);
+}
+
+.arena.is-landed .arena__glow::after {
+  animation: glow-pulse 1.4s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+@keyframes glow-pulse {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Contact shadow on the "floor" the coin stands on. Scaled per frame by script.js. */
+.arena__shadow {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 74%;
+  height: calc(var(--size) * 0.055);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.45) 55%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* Soft mirror reflection below the coin (a live clone of the coin, flipped). */
+.arena__mirror {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(1.5px);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 40%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 40%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.view {
+  position: absolute;
+  inset: 0;
+  perspective: calc(var(--size) * 3.2);
+  perspective-origin: 50% 50%;
+}
+
+.view--mirror { transform: scaleY(-1); }
+
+.toss,
+.coin {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.toss { will-change: transform; }
+
+.coin__face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.coin__face--front { transform: translateZ(calc(var(--thick) / 2)); }
+.coin__face--back { transform: rotateX(180deg) translateZ(calc(var(--thick) / 2)); }
+
+.coin__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.legend {
+  font-family: 'Cinzel', 'Trajan Pro', 'Times New Roman', serif;
+  font-size: 50px;
+  font-weight: 700;
+  letter-spacing: 16px;
+  text-anchor: middle;
+}
+
+/* Lighting overlays, driven per frame from script.js while the coin turns. */
+.coin__shade,
+.coin__sheen,
+.coin__glint {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.coin__shade {
+  background: radial-gradient(circle at 50% 40%, #1e1206 0%, #0d0702 100%);
+  opacity: 0;
+}
+
+.coin__sheen {
+  overflow: hidden;
+  opacity: 0;
+}
+
+.coin__sheen i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -50%;
+  height: 200%;
+  background: linear-gradient(180deg, rgba(255, 242, 210, 0) 34%, rgba(255, 242, 210, 0.7) 50%, rgba(255, 242, 210, 0) 66%);
+}
+
+/* A slow, occasional light sweep across the resting coin. */
+.coin__glint { overflow: hidden; }
+
+.coin__glint::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, rgba(255, 244, 214, 0) 0%, rgba(255, 244, 214, 0.2) 50%, rgba(255, 244, 214, 0) 100%);
+  transform: translateX(0) skewX(-12deg);
+  animation: glint 9s cubic-bezier(0.45, 0, 0.25, 1) 2.5s infinite;
+}
+
+@keyframes glint {
+  0% { transform: translateX(0) skewX(-12deg); }
+  20%, 100% { transform: translateX(470%) skewX(-12deg); }
+}
+
+.is-flipping .coin__glint { visibility: hidden; }
+
+/* The coin's milled edge: 72 strips arranged into a cylinder by script.js. */
+.coin__edge {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.coin__edge span {
+  --seg: calc(var(--size) * 0.04366 + 1px); /* 2·r·tan(2.5°) plus a hairline of overlap */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--thick);
+  height: var(--seg);
+  margin-left: calc(var(--thick) / -2);
+  margin-top: calc(var(--seg) / -2);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: rotateZ(calc(var(--i) * 5deg)) translateX(calc(var(--size) / 2 - 0.5px)) rotateY(90deg);
+  background-image:
+    linear-gradient(90deg, rgba(28, 15, 4, 0.7) 0%, rgba(28, 15, 4, 0) 20%, rgba(255, 240, 205, 0.14) 50%, rgba(28, 15, 4, 0) 80%, rgba(28, 15, 4, 0.7) 100%),
+    repeating-linear-gradient(180deg, rgba(255, 238, 200, 0.34) 0 1px, rgba(30, 16, 4, 0.45) 1px 2.4px, rgba(0, 0, 0, 0) 2.4px 3.2px);
+}
+
+/* --------------------------------------------------------------------------
+   Result
+   -------------------------------------------------------------------------- */
+
+.result {
+  position: relative;
+  z-index: 2;
+  margin-top: calc(var(--size) * 0.13);
+  min-height: calc(var(--name-size) * 1.1 + 2.1rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: opacity 0.25s ease;
+}
+
+.result.is-hidden { opacity: 0; }
+
+.result__name {
+  margin: 0;
+  padding-left: 0.12em; /* balance the trailing letter-spacing */
+  font-family: 'Cinzel', 'Trajan Pro', 'Times New Roman', serif;
+  font-weight: 600;
+  font-size: var(--name-size);
+  line-height: 1.1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold);
+  background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 48%, var(--gold-lo) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 22px rgba(214, 160, 86, 0.28));
+}
+
+.result__note {
+  margin: 0.5rem 0 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.05rem, 1.6vw + 0.6rem, 1.35rem);
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+}
+
+/* Before the first flip the result slot simply asks the question. */
+.result.is-idle .result__name {
+  padding-left: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: min(calc(var(--size) * 0.105), 9vw);
+  letter-spacing: 0.01em;
+  text-transform: none;
+  filter: none;
+}
+
+.result.is-revealed .result__name { animation: reveal-name 0.9s cubic-bezier(0.16, 0.8, 0.24, 1) both; }
+.result.is-revealed .result__note { animation: reveal-note 0.8s 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+
+@keyframes reveal-name {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); filter: blur(8px) drop-shadow(0 2px 22px rgba(214, 160, 86, 0)); }
+  to { opacity: 1; transform: none; filter: blur(0) drop-shadow(0 2px 22px rgba(214, 160, 86, 0.28)); }
+}
+
+@keyframes reveal-note {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Flip button
+   -------------------------------------------------------------------------- */
+
+.flip {
+  position: relative;
+  z-index: 2;
+  margin-top: clamp(18px, 3.2vh, 30px);
+  padding: 1.15em 2.5em 1.15em calc(2.5em + 0.3em);
+  border: 0;
+  border-radius: 999px;
+  appearance: none;
+  cursor: pointer;
+  font: 600 0.8rem/1 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #f6e8c8;
+  background: linear-gradient(180deg, #3a2c1c 0%, #1d1610 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 196, 0.16),
+    0 14px 34px -14px rgba(0, 0, 0, 0.9),
+    0 0 0 rgba(222, 174, 104, 0);
+  transition: transform 0.25s ease, box-shadow 0.3s ease, color 0.25s ease, opacity 0.3s ease, filter 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hairline gradient border. */
+.flip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #f4dba8 0%, #b88a50 45%, #5b3d1c 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.flip:hover {
+  transform: translateY(-1px);
+  color: #fff6e0;
+  filter: brightness(1.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 196, 0.22),
+    0 18px 38px -14px rgba(0, 0, 0, 0.95),
+    0 0 28px rgba(222, 174, 104, 0.22);
+}
+
+.flip:active { transform: translateY(0) scale(0.98); }
+
+.flip:focus-visible {
+  outline: 2px solid rgba(243, 214, 160, 0.85);
+  outline-offset: 4px;
+}
+
+.flip[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.45;
+  transform: none;
+  filter: none;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 196, 0.1), 0 14px 34px -14px rgba(0, 0, 0, 0.9);
+}
+
+.is-flipping .arena { cursor: default; }
+
+/* --------------------------------------------------------------------------
+   Tally
+   -------------------------------------------------------------------------- */
+
+.tally {
+  position: relative;
+  z-index: 2;
+  margin: 18px 0 0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+.tally span[data-count] { color: rgba(241, 230, 207, 0.6); }
+
+.tally__sep {
+  display: inline-block;
+  margin: 0 0.9em;
+  opacity: 0.5;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion: no idle shimmer, gentler reveals (the flip itself becomes
+   a short cross-fade in script.js).
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .coin__glint { display: none; }
+  .arena.is-landed .arena__glow::after { animation: none; }
+  .result.is-revealed .result__name,
+  .result.is-revealed .result__note { animation: fade-in 0.4s ease both; }
+  .flip { transition: opacity 0.2s ease; }
+  .flip:hover,
+  .flip:active { transform: none; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
